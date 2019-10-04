@@ -43,14 +43,16 @@ WiFiEspClient::WiFiEspClient(uint8_t sock) : _sock(sock)
 // this is very slow on ESP
 size_t WiFiEspClient::print(const __FlashStringHelper *ifsh)
 {
-	printFSH(ifsh, false);
+	LOGERROR1(F("WiFiEspClient print "), 8888);
+	return printFSH(ifsh, false);
 }
 
 // if we do override this, the standard println will call the print
 // method twice
 size_t WiFiEspClient::println(const __FlashStringHelper *ifsh)
 {
-	printFSH(ifsh, true);
+	LOGERROR1(F("WiFiEspClient println"), 9999);
+	return printFSH(ifsh, true);
 }
 
 
