@@ -22,6 +22,17 @@ along with The Arduino WiFiEsp library.  If not, see
 #include "utility/EspDrv.h"
 #include "utility/debug.h"
 
+#if defined(ARDUINO_ARCH_STM32)
+//For va_start
+#include <stdarg.h>
+
+//vsnprintf_P is not defined in avr/pgmspace.h for ststm32-maple
+#define vsnprintf_P vsnprintf
+#endif
+
+
+
+
 
 #define NUMESPTAGS 5
 
@@ -463,7 +474,7 @@ uint8_t EspDrv::getScanNetworks()
 
 	espEmptyBuf();
 
-	LOGDEBUG(F("----------------------------------------------"));
+	LOGDEBUG(F("------------getScanNetworks-------------"));
 	LOGDEBUG(F(">> AT+CWLAP"));
 	
 	espSerial->println(F("AT+CWLAP"));
@@ -500,7 +511,7 @@ uint8_t EspDrv::getScanNetworks()
 	if (idx==-1)
 		return -1;
 
-	LOGDEBUG1(F("---------------------------------------------- >"), ssidListNum);
+	LOGDEBUG1(F("------------end getScanNetworks-------------- >"), ssidListNum);
 	LOGDEBUG();
     return ssidListNum;
 }
@@ -795,9 +806,9 @@ int EspDrv::getDataBuf(uint8_t connId, uint8_t *buf, uint16_t bufSize)
 
 bool EspDrv::sendData(uint8_t sock, const uint8_t *data, uint16_t len)
 {
-	LOGDEBUG2(F("> sendData:"), sock, len);
-
-	char cmdBuf[20];
+	LOGDEBUG2(F("> received   sendData printf2 ConnID   len: "), sock, len);
+    
+	char cmdBuf[22];
 	sprintf_P(cmdBuf, PSTR("AT+CIPSEND=%d,%u"), sock, len);
 	espSerial->println(cmdBuf);
 
@@ -823,9 +834,10 @@ bool EspDrv::sendData(uint8_t sock, const uint8_t *data, uint16_t len)
 // Overrided sendData method for __FlashStringHelper strings
 bool EspDrv::sendData(uint8_t sock, const __FlashStringHelper *data, uint16_t len, bool appendCrLf)
 {
-	LOGDEBUG2(F("> sendData:"), sock, len);
+	//LOGDEBUG2(F("> sendData:"), sock, len);
+    LOGDEBUG2(F("> received   sendData printf1 ConnID   len: "), sock, len);
 
-	char cmdBuf[20];
+	char cmdBuf[22];
 	uint16_t len2 = len + 2*appendCrLf;
 	sprintf_P(cmdBuf, PSTR("AT+CIPSEND=%d,%u"), sock, len2);
 	espSerial->println(cmdBuf);
@@ -922,7 +934,7 @@ bool EspDrv::sendCmdGet(const __FlashStringHelper* cmd, const char* startTag, co
 
 	espEmptyBuf();
 
-	LOGDEBUG(F("----------------------------------------------"));
+	LOGDEBUG(F("------------sendCmdGet-----------------------"));
 	LOGDEBUG1(F(">>"), cmd);
 
 	// send AT command to ESP
@@ -966,7 +978,7 @@ bool EspDrv::sendCmdGet(const __FlashStringHelper* cmd, const char* startTag, co
 		LOGWARN(F("No tag found"));
 	}
 
-	LOGDEBUG1(F("---------------------------------------------- >"), outStr);
+	LOGDEBUG1(F("-------------end sendCmdGet------------------- >"), outStr);
 	LOGDEBUG();
 
 	return ret;
@@ -992,14 +1004,14 @@ int EspDrv::sendCmd(const __FlashStringHelper* cmd, int timeout)
 {
     espEmptyBuf();
 
-	LOGDEBUG(F("----------------------------------------------"));
+	LOGDEBUG(F("---------------sendCmd---------------------"));
 	LOGDEBUG1(F(">>"), cmd);
 
 	espSerial->println(cmd);
 
 	int idx = readUntil(timeout);
 
-	LOGDEBUG1(F("---------------------------------------------- >"), idx);
+	LOGDEBUG1(F("-------------end sendCmd----------------- >"), idx);
 	LOGDEBUG();
 
     return idx;
@@ -1022,14 +1034,14 @@ int EspDrv::sendCmd(const __FlashStringHelper* cmd, int timeout, ...)
 
 	espEmptyBuf();
 
-	LOGDEBUG(F("----------------------------------------------"));
+	LOGDEBUG(F("--------------sendCmd-----------------------"));
 	LOGDEBUG1(F(">>"), cmdBuf);
 
 	espSerial->println(cmdBuf);
 
 	int idx = readUntil(timeout);
 
-	LOGDEBUG1(F("---------------------------------------------- >"), idx);
+	LOGDEBUG1(F("--------------end sendCmd-------------------- >"), idx);
 	LOGDEBUG();
 
 	return idx;
