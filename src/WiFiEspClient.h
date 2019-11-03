@@ -39,6 +39,8 @@ public:
   size_t print(const __FlashStringHelper *ifsh);
   size_t println(const __FlashStringHelper *ifsh);
 
+  size_t print(const char *data);
+  size_t println(const char *data);
 
   /*
   * Connect to the specified IP address and port. The return value indicates success or failure.
@@ -138,6 +140,8 @@ private:
   int connect(const char* host, uint16_t port, uint8_t protMode);
   
   size_t printFSH(const __FlashStringHelper *ifsh, bool appendCrLf);
+
+  size_t printDATA(const char *data, bool appendCrLf);
 
 };
 

@@ -806,7 +806,7 @@ int EspDrv::getDataBuf(uint8_t connId, uint8_t *buf, uint16_t bufSize)
 
 bool EspDrv::sendData(uint8_t sock, const uint8_t *data, uint16_t len)
 {
-	LOGDEBUG2(F("> received   sendData printf2 ConnID   len: "), sock, len);
+	LOGDEBUG2(F("> received   sendData ..... ConnID   len: "), sock, len);
     
 	char cmdBuf[22];
 	sprintf_P(cmdBuf, PSTR("AT+CIPSEND=%d,%u"), sock, len);
@@ -835,7 +835,7 @@ bool EspDrv::sendData(uint8_t sock, const uint8_t *data, uint16_t len)
 bool EspDrv::sendData(uint8_t sock, const __FlashStringHelper *data, uint16_t len, bool appendCrLf)
 {
 	//LOGDEBUG2(F("> sendData:"), sock, len);
-    LOGDEBUG2(F("> received   sendData printf1 ConnID   len: "), sock, len);
+    LOGDEBUG2(F("> received   sendData FSH CrLf ConnID   len: "), sock, len);
 
 	char cmdBuf[22];
 	uint16_t len2 = len + 2*appendCrLf;
@@ -871,6 +871,43 @@ bool EspDrv::sendData(uint8_t sock, const __FlashStringHelper *data, uint16_t le
 
     return true;
 }
+
+
+bool EspDrv::sendDATA(uint8_t sock, const char *data, uint16_t len, bool appendCrLf)
+{
+	//LOGDEBUG2(F("> sendData:"), sock, len);
+    LOGDEBUG2(F("> received   sendData CrLf ConnID   len: "), sock, len);
+
+	char cmdBuf[22];
+	uint16_t len2 = len + 2*appendCrLf;
+	sprintf(cmdBuf, "AT+CIPSEND=%d,%u", sock, len2);
+	espSerial->println(cmdBuf);
+
+	int idx = readUntil(1000, (char *)">", false);
+	if(idx!=NUMESPTAGS)
+	{
+		LOGERROR(F("Data packet send error (1)"));
+		return false;
+	}
+
+	espSerial->write(data, len);
+	
+	if (appendCrLf)
+	{
+		espSerial->write('\r');
+		espSerial->write('\n');
+	}
+
+	idx = readUntil(2000);
+	if(idx!=TAG_SENDOK)
+	{
+		LOGERROR(F("Data packet send error (2)"));
+		return false;
+	}
+
+    return true;
+}
+
 
 bool EspDrv::sendDataUdp(uint8_t sock, const char* host, uint16_t port, const uint8_t *data, uint16_t len)
 {
@@ -934,7 +971,7 @@ bool EspDrv::sendCmdGet(const __FlashStringHelper* cmd, const char* startTag, co
 
 	espEmptyBuf();
 
-	LOGDEBUG(F("------------sendCmdGet-----------------------"));
+	LOGDEBUG(F("------------sendCmdGet  FSH-----------------------"));
 	LOGDEBUG1(F(">>"), cmd);
 
 	// send AT command to ESP

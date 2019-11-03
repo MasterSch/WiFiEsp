@@ -43,7 +43,7 @@ WiFiEspClient::WiFiEspClient(uint8_t sock) : _sock(sock)
 // this is very slow on ESP
 size_t WiFiEspClient::print(const __FlashStringHelper *ifsh)
 {
-	LOGERROR1(F("WiFiEspClient print "), 8888);
+	LOGERROR1(F("WiFiEspClient print FSH"), 8888);
 	return printFSH(ifsh, false);
 }
 
@@ -51,8 +51,24 @@ size_t WiFiEspClient::print(const __FlashStringHelper *ifsh)
 // method twice
 size_t WiFiEspClient::println(const __FlashStringHelper *ifsh)
 {
-	LOGERROR1(F("WiFiEspClient println"), 9999);
+	LOGERROR1(F("WiFiEspClient println FSH"), 9999);
 	return printFSH(ifsh, true);
+}
+
+size_t WiFiEspClient::print(const char *data)
+{
+	Serial.println(data);
+	LOGERROR1(F("WiFiEspClient print.... "), 60);
+	return printDATA(data, false);
+}
+
+// if we do override this, the standard println will call the print
+// method twice
+size_t WiFiEspClient::println(const char *data)
+{
+	Serial.println(data);
+	LOGERROR1(F("WiFiEspClient println...."), 68);
+	return printDATA(data, true);
 }
 
 
@@ -279,6 +295,31 @@ size_t WiFiEspClient::printFSH(const __FlashStringHelper *ifsh, bool appendCrLf)
 	}
 
 	bool r = EspDrv::sendData(_sock, ifsh, size, appendCrLf);
+	if (!r)
+	{
+		setWriteError();
+		LOGERROR1(F("Failed to write to socket"), _sock);
+		delay(4000);
+		stop();
+		return 0;
+	}
+
+	return size;
+}
+
+
+size_t WiFiEspClient::printDATA(const char *data, bool appendCrLf)
+{
+	size_t size = strlen(data);
+	
+	if (_sock >= MAX_SOCK_NUM or size==0)
+	{
+		setWriteError();
+		return 0;
+	}
+
+	bool r = EspDrv::sendDATA(_sock, data, size, appendCrLf);
+	
 	if (!r)
 	{
 		setWriteError();
